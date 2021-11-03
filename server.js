@@ -12,6 +12,21 @@ const {
 const app = express();
 const { books, authors } = require("./data.js");
 
+const AuthorType = new GraphQLObjectType({
+  name: "Author",
+  description: "this is am author",
+  fields: () => ({
+    id: { type: GraphQLNonNull(GraphQLInt) },
+    name: { type: GraphQLNonNull(GraphQLString) },
+    books: {
+      type: GraphQLList(BookType),
+      resolve: (author) => {
+        return books.filter((book) => book.authorId === author.id);
+      },
+    },
+  }),
+});
+
 const BookType = new GraphQLObjectType({
   name: "Book",
   description: "this is a book",
@@ -19,6 +34,12 @@ const BookType = new GraphQLObjectType({
     id: { type: GraphQLNonNull(GraphQLInt) },
     name: { type: GraphQLNonNull(GraphQLString) },
     authorId: { type: GraphQLNonNull(GraphQLInt) },
+    author: {
+      type: AuthorType,
+      resolve: (book) => {
+        return authors.find((author) => author.id === book.authorId);
+      },
+    },
   }),
 });
 
@@ -28,8 +49,13 @@ const RootQueryType = new GraphQLObjectType({
   fields: () => ({
     books: {
       type: new GraphQLList(BookType),
-      description: "a list of books",
+      description: "a list of all books",
       resolve: () => books,
+    },
+    authors: {
+      type: new GraphQLList(AuthorType),
+      description: "a list of all authors",
+      resolve: () => authors,
     },
   }),
 });
